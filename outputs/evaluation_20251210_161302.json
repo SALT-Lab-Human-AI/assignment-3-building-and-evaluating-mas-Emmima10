@@ -1,0 +1,98 @@
+{
+  "timestamp": "2025-12-10T16:13:02.820720",
+  "summary": {
+    "total_queries": 6,
+    "successful": 0,
+    "failed": 6,
+    "success_rate": 0.0
+  },
+  "scores": {
+    "overall_average": 0.0,
+    "by_criterion": {},
+    "by_category": {}
+  },
+  "best_result": null,
+  "worst_result": null,
+  "error_analysis": {
+    "total_errors": 6,
+    "error_types": {
+      "other": 6
+    },
+    "sample_errors": [
+      "name 'is_safe' is not defined",
+      "name 'is_safe' is not defined",
+      "name 'is_safe' is not defined",
+      "name 'is_safe' is not defined",
+      "name 'is_safe' is not defined"
+    ]
+  },
+  "performance_analysis": {},
+  "detailed_results": [
+    {
+      "query": "What are the key principles of explainable AI for novice users?",
+      "response": "An error occurred while processing your query: name 'is_safe' is not defined",
+      "error": "name 'is_safe' is not defined",
+      "category": "explainable_ai",
+      "metadata": {
+        "error": true,
+        "error_type": "orchestrator_error"
+      },
+      "ground_truth": "Explainable AI for novices should focus on transparency, simple visualizations, interactive explanations, and building user trust through understandable model behavior."
+    },
+    {
+      "query": "How has AR usability evolved in the past 5 years?",
+      "response": "An error occurred while processing your query: name 'is_safe' is not defined",
+      "error": "name 'is_safe' is not defined",
+      "category": "ar_usability",
+      "metadata": {
+        "error": true,
+        "error_type": "orchestrator_error"
+      },
+      "ground_truth": "AR usability has evolved significantly with improved hand tracking, spatial mapping, gesture recognition, and more intuitive interaction paradigms. Recent developments include better occlusion handling, reduced latency, and enhanced user comfort."
+    },
+    {
+      "query": "What are ethical considerations in using AI for education?",
+      "response": "An error occurred while processing your query: name 'is_safe' is not defined",
+      "error": "name 'is_safe' is not defined",
+      "category": "ai_ethics",
+      "metadata": {
+        "error": true,
+        "error_type": "orchestrator_error"
+      },
+      "ground_truth": "Key ethical considerations include algorithmic bias and fairness, student data privacy, transparency in AI decision-making, accessibility for all learners, maintaining student autonomy, and ensuring equitable access to AI-enhanced educational tools."
+    },
+    {
+      "query": "Compare different approaches to measuring user experience in mobile applications",
+      "response": "An error occurred while processing your query: name 'is_safe' is not defined",
+      "error": "name 'is_safe' is not defined",
+      "category": "ux_measurement",
+      "metadata": {
+        "error": true,
+        "error_type": "orchestrator_error"
+      },
+      "ground_truth": null
+    },
+    {
+      "query": "What are the latest developments in conversational AI for healthcare?",
+      "response": "An error occurred while processing your query: name 'is_safe' is not defined",
+      "error": "name 'is_safe' is not defined",
+      "category": "conversational_ai",
+      "metadata": {
+        "error": true,
+        "error_type": "orchestrator_error"
+      },
+      "ground_truth": null
+    },
+    {
+      "query": "How do design patterns for accessibility differ across web and mobile platforms?",
+      "response": "An error occurred while processing your query: name 'is_safe' is not defined",
+      "error": "name 'is_safe' is not defined",
+      "category": "accessibility",
+      "metadata": {
+        "error": true,
+        "error_type": "orchestrator_error"
+      },
+      "ground_truth": null
+    }
+  ]
+}
