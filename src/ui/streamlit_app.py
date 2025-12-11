@@ -485,6 +485,345 @@ def export_response_markdown(result: Dict[str, Any]):
     )
 
 
+def load_evaluation_results():
+    """Load all evaluation results from the outputs directory."""
+    outputs_dir = Path("outputs")
+    evaluation_files = list(outputs_dir.glob("evaluation_*.json"))
+    judge_files = list(outputs_dir.glob("judge_outputs_*.json"))
+    
+    evaluations = []
+    for file in sorted(evaluation_files, reverse=True):
+        try:
+            with open(file, 'r') as f:
+                data = json.load(f)
+                evaluations.append({
+                    "filename": file.name,
+                    "timestamp": data.get("timestamp", "Unknown"),
+                    "data": data
+                })
+        except Exception as e:
+            st.error(f"Error loading {file.name}: {e}")
+    
+    judge_outputs = []
+    for file in sorted(judge_files, reverse=True):
+        try:
+            with open(file, 'r') as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    # Multiple judge outputs
+                    for item in data:
+                        judge_outputs.append({
+                            "filename": file.name,
+                            "data": item
+                        })
+                else:
+                    # Single judge output
+                    judge_outputs.append({
+                        "filename": file.name,
+                        "data": data
+                    })
+        except Exception as e:
+            st.error(f"Error loading {file.name}: {e}")
+    
+    return evaluations, judge_outputs
+
+
+def display_evaluation_page():
+    """Display the evaluation results page."""
+    st.title("📊 LLM-as-a-Judge Evaluation Results")
+    st.markdown("View comprehensive evaluation metrics and judge outputs from system runs.")
+    
+    # Load evaluation data
+    evaluations, judge_outputs = load_evaluation_results()
+    
+    if not evaluations and not judge_outputs:
+        st.warning("No evaluation results found. Run evaluations first using `python -m src.evaluation.evaluator`")
+        return
+    
+    # Create tabs
+    tab1, tab2, tab3 = st.tabs(["📈 Summary", "📝 Detailed Results", "🔍 Raw Judge Outputs"])
+    
+    with tab1:
+        display_evaluation_summary(evaluations)
+    
+    with tab2:
+        display_detailed_evaluations(evaluations)
+    
+    with tab3:
+        display_judge_outputs(judge_outputs)
+
+
+def display_evaluation_summary(evaluations):
+    """Display evaluation summary metrics."""
+    if not evaluations:
+        st.info("No evaluation summaries available.")
+        return
+    
+    # Select evaluation run
+    eval_options = [f"{e['timestamp']} ({e['filename']})" for e in evaluations]
+    selected_idx = st.selectbox("Select Evaluation Run:", range(len(eval_options)), 
+                                 format_func=lambda x: eval_options[x])
+    
+    eval_data = evaluations[selected_idx]["data"]
+    
+    # Debug: Show what we loaded
+    st.write(f"DEBUG: Loaded file: {evaluations[selected_idx]['filename']}")
+    st.write(f"DEBUG: Overall average from data: {eval_data.get('scores', {}).get('overall_average', 'NOT FOUND')}")
+    
+    st.markdown("### Overall Performance")
+    
+    # Display summary metrics
+    summary = eval_data.get("summary", {})
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Total Queries", summary.get("total_queries", 0))
+    with col2:
+        st.metric("Successful", summary.get("successful", 0))
+    with col3:
+        st.metric("Failed", summary.get("failed", 0))
+    with col4:
+        success_rate = summary.get("success_rate", 0) * 100
+        st.metric("Success Rate", f"{success_rate:.1f}%")
+    
+    st.divider()
+    
+    # Display scores
+    st.markdown("### Quality Scores")
+    scores = eval_data.get("scores", {})
+    overall_avg = scores.get("overall_average", 0)
+    
+    st.metric("Overall Average Score", f"{overall_avg:.2f} / 1.0")
+    
+    # By criterion
+    by_criterion = scores.get("by_criterion", {})
+    if by_criterion:
+        st.markdown("#### Scores by Criterion")
+        cols = st.columns(len(by_criterion))
+        for i, (criterion, score) in enumerate(by_criterion.items()):
+            with cols[i]:
+                st.metric(criterion.replace("_", " ").title(), f"{score:.2f}")
+    
+    # By category
+    by_category = scores.get("by_category", {})
+    if by_category:
+        st.markdown("#### Scores by Category")
+        for category, score in by_category.items():
+            st.progress(score, text=f"{category}: {score:.2f}")
+    
+    st.divider()
+    
+    # Error analysis
+    st.markdown("### Error Analysis")
+    error_analysis = eval_data.get("error_analysis", {})
+    
+    if error_analysis.get("total_errors", 0) > 0:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Total Errors", error_analysis.get("total_errors", 0))
+        with col2:
+            error_types = error_analysis.get("error_types", {})
+            most_common = max(error_types.items(), key=lambda x: x[1]) if error_types else ("None", 0)
+            st.metric("Most Common Error", f"{most_common[0]} ({most_common[1]})")
+        
+        # Sample errors
+        sample_errors = error_analysis.get("sample_errors", [])
+        if sample_errors:
+            with st.expander("Sample Errors", expanded=False):
+                for i, error in enumerate(sample_errors[:5], 1):
+                    st.error(f"{i}. {error}")
+    else:
+        st.success("✅ No errors recorded!")
+    
+    # Best and worst results
+    st.divider()
+    st.markdown("### Best & Worst Results")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        best_result = eval_data.get("best_result")
+        if best_result:
+            st.markdown("#### 🏆 Best Result")
+            st.metric("Score", f"{best_result.get('overall_score', 0):.2f}")
+            st.text(f"Query: {best_result.get('query', 'Unknown')[:100]}...")
+        else:
+            st.info("No best result available")
+    
+    with col2:
+        worst_result = eval_data.get("worst_result")
+        if worst_result:
+            st.markdown("#### ⚠️ Worst Result")
+            st.metric("Score", f"{worst_result.get('overall_score', 0):.2f}")
+            st.text(f"Query: {worst_result.get('query', 'Unknown')[:100]}...")
+        else:
+            st.info("No worst result available")
+
+
+def display_detailed_evaluations(evaluations):
+    """Display detailed evaluation results for each query."""
+    if not evaluations:
+        st.info("No detailed evaluations available.")
+        return
+    
+    # Select evaluation run
+    eval_options = [f"{e['timestamp']} ({e['filename']})" for e in evaluations]
+    selected_idx = st.selectbox("Select Evaluation Run:", range(len(eval_options)), 
+                                 format_func=lambda x: eval_options[x], key="detailed_select")
+    
+    eval_data = evaluations[selected_idx]["data"]
+    detailed_results = eval_data.get("detailed_results", [])
+    
+    if not detailed_results:
+        st.warning("No detailed results available.")
+        return
+    
+    st.markdown(f"### Showing {len(detailed_results)} Query Results")
+    
+    # Filter options
+    col1, col2 = st.columns(2)
+    with col1:
+        filter_category = st.selectbox("Filter by Category:", 
+                                       ["All"] + list(set(r.get("category", "unknown") for r in detailed_results)))
+    with col2:
+        filter_error = st.checkbox("Show only errors")
+    
+    # Apply filters
+    filtered_results = detailed_results
+    if filter_category != "All":
+        filtered_results = [r for r in filtered_results if r.get("category") == filter_category]
+    if filter_error:
+        filtered_results = [r for r in filtered_results if "error" in r]
+    
+    st.markdown(f"**Showing {len(filtered_results)} results**")
+    
+    # Display each result
+    for i, result in enumerate(filtered_results, 1):
+        with st.expander(f"Query {i}: {result.get('query', 'Unknown')[:80]}..."):
+            # Query info
+            st.markdown(f"**Category:** {result.get('category', 'Unknown')}")
+            
+            # Score - check both locations for overall_score
+            overall_score = result.get("overall_score", 0)
+            if overall_score == 0 and "evaluation" in result:
+                overall_score = result["evaluation"].get("overall_score", 0)
+            st.metric("Overall Score", f"{overall_score:.2f}")
+            
+            # Response
+            st.markdown("#### Response")
+            response = result.get("response", "No response")
+            st.text_area("Response Text", response, height=150, key=f"response_{i}", disabled=True, label_visibility="collapsed")
+            
+            # Error if present
+            if "error" in result:
+                st.error(f"❌ Error: {result['error']}")
+            
+            # Judge evaluations - check both locations
+            judge_evals = result.get("judge_evaluations", {})
+            if not judge_evals and "evaluation" in result:
+                # Try getting from nested evaluation object
+                eval_data = result["evaluation"]
+                judge_evals = eval_data.get("criterion_scores", {})
+            
+            if judge_evals:
+                st.markdown("#### Judge Evaluations")
+                
+                for criterion, eval_data in judge_evals.items():
+                    # Handle both 'average_score' and 'score' field names
+                    avg_score = eval_data.get("average_score") or eval_data.get("score", 0)
+                    
+                    with st.container():
+                        st.markdown(f"**{criterion.replace('_', ' ').title()}:** {avg_score:.2f}")
+                        
+                        # Overall reasoning
+                        reasoning = eval_data.get("reasoning", "")
+                        if reasoning:
+                            st.caption(f"💭 {reasoning[:200]}...")
+                        
+                        # Perspectives
+                        perspectives = eval_data.get("perspectives", [])
+                        if perspectives:
+                            for p in perspectives:
+                                perspective_name = p.get("perspective", "Unknown")
+                                score = p.get("score", 0)
+                                p_reasoning = p.get("reasoning", "")
+                                
+                                with st.expander(f"📊 {perspective_name.title()} Perspective (Score: {score:.2f})"):
+                                    st.write(p_reasoning)
+                
+                st.divider()
+
+
+def display_judge_outputs(judge_outputs):
+    """Display raw judge outputs with prompts."""
+    if not judge_outputs:
+        st.info("No judge outputs available.")
+        return
+    
+    st.markdown("### Raw Judge Prompts and Outputs")
+    st.markdown("View the actual prompts sent to the LLM judge and its raw responses.")
+    
+    # Select a judge output to display
+    st.markdown(f"**Total Judge Outputs:** {len(judge_outputs)}")
+    
+    selected_idx = st.selectbox("Select Query to View:", 
+                                range(len(judge_outputs)),
+                                format_func=lambda x: f"Query: {judge_outputs[x]['data'].get('query', 'Unknown')[:60]}...")
+    
+    judge_data = judge_outputs[selected_idx]["data"]
+    
+    # Display query
+    st.markdown("#### Original Query")
+    st.info(judge_data.get("query", "Unknown"))
+    
+    # Display response
+    st.markdown("#### System Response")
+    response = judge_data.get("response", "No response")
+    st.text_area("System Response Text", response, height=200, disabled=True, label_visibility="collapsed")
+    
+    # Display overall score
+    overall_score = judge_data.get("overall_score", 0)
+    st.metric("Overall Judge Score", f"{overall_score:.2f}")
+    
+    st.divider()
+    
+    # Display judge evaluations
+    judge_evals = judge_data.get("judge_evaluations", {})
+    
+    if judge_evals:
+        st.markdown("#### Judge Evaluations by Criterion")
+        
+        for criterion, eval_data in judge_evals.items():
+            with st.expander(f"🔍 {criterion.replace('_', ' ').title()}", expanded=False):
+                avg_score = eval_data.get("average_score", 0)
+                st.metric("Average Score", f"{avg_score:.2f}")
+                
+                # Overall reasoning
+                st.markdown("**Overall Reasoning:**")
+                st.write(eval_data.get("reasoning", "No reasoning provided"))
+                
+                st.divider()
+                
+                # Perspectives
+                perspectives = eval_data.get("perspectives", [])
+                for p in perspectives:
+                    st.markdown(f"##### {p.get('perspective', 'Unknown').title()} Perspective")
+                    st.metric("Score", f"{p.get('score', 0):.2f}")
+                    st.markdown("**Reasoning:**")
+                    st.write(p.get("reasoning", "No reasoning provided"))
+                    st.divider()
+    
+    # Download button for raw JSON
+    st.markdown("#### Export Raw Data")
+    json_str = json.dumps(judge_data, indent=2)
+    st.download_button(
+        label="📥 Download Raw JSON",
+        data=json_str,
+        file_name=f"judge_output_{judge_outputs[selected_idx]['filename']}",
+        mime="application/json"
+    )
+
+
 def main():
     """Main Streamlit app."""
     st.set_page_config(
@@ -494,6 +833,13 @@ def main():
     )
 
     initialize_session_state()
+    
+    # Navigation
+    page = st.sidebar.radio("Navigation", ["🏠 Home", "📊 Evaluation Results"])
+    
+    if page == "📊 Evaluation Results":
+        display_evaluation_page()
+        return
 
     # Header
     st.title("🤖 Multi-Agent Research Assistant")

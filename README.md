@@ -258,6 +258,21 @@ python main.py --mode web
 streamlit run src/ui/streamlit_app.py
 ```
 
+The web interface includes:
+- **Home Page**: Interactive query interface with agent traces, citations, and safety events
+- **📊 Evaluation Results**: Comprehensive dashboard for LLM-as-a-Judge evaluation metrics
+  - Summary view with overall performance metrics
+  - Detailed query-by-query results
+  - Raw judge outputs with complete prompts and reasoning
+
+**Viewing Evaluation Results:**
+1. Run evaluations first: `python -m src.evaluation.evaluator`
+2. Launch the UI: `streamlit run src/ui/streamlit_app.py`
+3. Navigate to "📊 Evaluation Results" in the sidebar
+4. Explore the three tabs: Summary, Detailed Results, and Raw Judge Outputs
+
+See [`EVALUATION_UI_GUIDE.md`](EVALUATION_UI_GUIDE.md) for detailed instructions on using the evaluation UI.
+
 ### Running Evaluation
 
 ```bash

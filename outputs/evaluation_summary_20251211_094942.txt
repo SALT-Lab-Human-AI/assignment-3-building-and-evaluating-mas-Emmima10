@@ -1,0 +1,68 @@
+======================================================================
+EVALUATION SUMMARY
+======================================================================
+
+OVERVIEW
+----------------------------------------------------------------------
+Total Queries: 6
+Successful: 5
+Failed: 1
+Success Rate: 83.33%
+
+SCORES
+----------------------------------------------------------------------
+Overall Average Score: 0.635
+
+Scores by Criterion:
+  relevance: 0.710
+  evidence_quality: 0.350
+  factual_accuracy: 0.650
+  safety_compliance: 1.000
+  clarity: 0.600
+
+Scores by Category:
+  explainable_ai: 0.775
+  ar_usability: 0.775
+  ai_ethics: 0.743
+  ux_measurement: 0.150
+  conversational_ai: 0.733
+
+======================================================================
+BEST AND WORST PERFORMING QUERIES
+======================================================================
+
+BEST:
+  Query: What are the key principles of explainable AI for novice users?
+  Score: 0.775
+  Category: explainable_ai
+
+WORST:
+  Query: Compare different approaches to measuring user experience in mobile applications
+  Score: 0.150
+  Category: ux_measurement
+
+======================================================================
+ERROR ANALYSIS
+======================================================================
+
+Total Errors: 1
+Error Types:
+  api_error: 1
+
+Sample Errors:
+  - API connection error: APIConnectionError: Connection error.
+Traceback:
+Traceback (most recent call l
+
+======================================================================
+PERFORMANCE ANALYSIS
+======================================================================
+
+Score Distribution:
+  excellent (0.9-1.0): 0
+  good (0.7-0.89): 4
+  fair (0.5-0.69): 0
+  poor (0.0-0.49): 1
+
+Weakest Criterion: evidence_quality (avg: 0.350)
+
