@@ -578,9 +578,4 @@ Zheng, L., Chiang, W. L., Sheng, Y., Zhuang, S., Wu, Z., Zhuang, Y., ... & Stoic
 
 ---
 
-**Appendices:**
 
-- Appendix A: Complete system configuration (config.yaml)
-- Appendix B: Sample conversation traces
-- Appendix C: Safety event logs
-- Appendix D: Evaluation results (detailed)
