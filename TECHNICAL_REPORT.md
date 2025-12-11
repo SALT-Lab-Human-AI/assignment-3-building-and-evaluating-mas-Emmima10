@@ -1,7 +1,7 @@
 # Multi-Agent Research Assistant System: Technical Report
 
-**Student:** [Your Name]  
-**Course:** [Course Code]  
+**Student:** [Emmima Gnanaraj]  
+**Course:** [IS 492]  
 **Date:** December 10, 2025
 
 ---
